@@ -18,7 +18,7 @@ st.title("📈 Walmart Sales Forecasting App")
 @st.cache_data
 def load_data():
     df = pd.read_csv("Walmart_Sales.csv")
-    df.columns = df.columns.str.strip().str.lower()
+    df.columns = df.columns.str.strip().str.lower()  # Clean column names to lowercase
     df['date'] = pd.to_datetime(df['date'], errors='coerce')
     df.dropna(subset=['date'], inplace=True)
     return df
@@ -34,8 +34,8 @@ def evaluate_model(test, forecast):
 # Load and show data
 data = load_data()
 
-st.write("Available columns:", store_data.columns.tolist())
-st.write(store_data.head())
+st.write("Available columns:", data.columns.tolist())  # Corrected column reference to 'data'
+st.write(data.head())
 
 # Sidebar: Store filter
 st.sidebar.header("1. Select Store")
@@ -48,7 +48,7 @@ if 'store' in data.columns:
         st.warning("No sales data found for the selected store.")
     else:
         st.write(f"### 📍 Sales for Store {selected_store}")
-        st.line_chart(store_data.set_index('date')['Weekly_Sales'])
+        st.line_chart(store_data.set_index('date')['weekly_sales'])  # 'weekly_sales' instead of 'sales'
 
         # Model & Horizon
         st.sidebar.header("2. Forecast Settings")
@@ -60,7 +60,7 @@ if 'store' in data.columns:
         forecast_horizon = st.sidebar.slider("Weeks to Forecast:", 1, 52, 12)
 
         # Prepare weekly data
-        weekly = store_data.resample("W-Mon", on="date")['sales'].sum().reset_index()
+        weekly = store_data.resample("W-Mon", on="date")['weekly_sales'].sum().reset_index()  # 'weekly_sales'
         weekly.set_index('date', inplace=True)
         train_size = int(len(weekly) * 0.8)
         train, test = weekly[:train_size], weekly[train_size:]
@@ -71,18 +71,18 @@ if 'store' in data.columns:
             # Exponential Smoothing
             if "Exponential Smoothing" in selected_models:
                 try:
-                    es_model = ExponentialSmoothing(train['sales'], seasonal='add', seasonal_periods=52).fit()
+                    es_model = ExponentialSmoothing(train['weekly_sales'], seasonal='add', seasonal_periods=52).fit()
                     forecast = es_model.forecast(forecast_horizon)
-                    results["Exponential Smoothing"] = (*evaluate_model(test['sales'][:forecast_horizon], forecast), forecast)
+                    results["Exponential Smoothing"] = (*evaluate_model(test['weekly_sales'][:forecast_horizon], forecast), forecast)
                 except Exception as e:
                     st.error(f"Exponential Smoothing error: {e}")
 
             # ARIMA
             if "ARIMA" in selected_models:
                 try:
-                    arima_model = ARIMA(train['sales'], order=(5, 1, 0)).fit()
+                    arima_model = ARIMA(train['weekly_sales'], order=(5, 1, 0)).fit()
                     forecast = arima_model.forecast(steps=forecast_horizon)
-                    results["ARIMA"] = (*evaluate_model(test['sales'][:forecast_horizon], forecast), forecast)
+                    results["ARIMA"] = (*evaluate_model(test['weekly_sales'][:forecast_horizon], forecast), forecast)
                 except Exception as e:
                     st.error(f"ARIMA error: {e}")
 
@@ -96,12 +96,12 @@ if 'store' in data.columns:
                     return df
 
                 try:
-                    rf_data = create_rf_features(train['sales'].values)
+                    rf_data = create_rf_features(train['weekly_sales'].values)
                     X_train, y_train = rf_data.iloc[:, 1:], rf_data.iloc[:, 0]
                     rf_model = RandomForestRegressor()
                     rf_model.fit(X_train, y_train)
 
-                    all_sales = weekly['sales'].values
+                    all_sales = weekly['weekly_sales'].values
                     test_rf = create_rf_features(all_sales)[-forecast_horizon:]
                     X_test = test_rf.iloc[:, 1:]
                     y_test = test_rf.iloc[:, 0]
@@ -114,7 +114,7 @@ if 'store' in data.columns:
             if "LSTM" in selected_models:
                 try:
                     scaler = MinMaxScaler()
-                    scaled = scaler.fit_transform(train['sales'].values.reshape(-1, 1))
+                    scaled = scaler.fit_transform(train['weekly_sales'].values.reshape(-1, 1))
 
                     def create_lstm_data(series, look_back=3):
                         X, Y = [], []
@@ -135,13 +135,13 @@ if 'store' in data.columns:
                     lstm_model.compile(optimizer="adam", loss="mse")
                     lstm_model.fit(X_train, y_train, epochs=10, batch_size=1, verbose=0)
 
-                    scaled_test = scaler.transform(test['sales'].values.reshape(-1, 1))
+                    scaled_test = scaler.transform(test['weekly_sales'].values.reshape(-1, 1))
                     X_test, y_test = create_lstm_data(scaled_test)
                     X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
                     forecast = lstm_model.predict(X_test)
                     forecast = scaler.inverse_transform(forecast).flatten()
 
-                    results["LSTM"] = (*evaluate_model(test['sales'].values[3:], forecast), forecast)
+                    results["LSTM"] = (*evaluate_model(test['weekly_sales'].values[3:], forecast), forecast)
                 except Exception as e:
                     st.error(f"LSTM error: {e}")
 
@@ -149,7 +149,7 @@ if 'store' in data.columns:
         if results:
             st.subheader("📊 Forecast Results")
             fig, ax = plt.subplots(figsize=(12, 6))
-            ax.plot(test.index[:forecast_horizon], test['sales'][:forecast_horizon], label="Actual", linewidth=2)
+            ax.plot(test.index[:forecast_horizon], test['weekly_sales'][:forecast_horizon], label="Actual", linewidth=2)
 
             for model, (mae, rmse, mape, forecast) in results.items():
                 ax.plot(test.index[:forecast_horizon], forecast[:forecast_horizon], '--', label=f"{model}")
