@@ -34,6 +34,9 @@ def evaluate_model(test, forecast):
 # Load and show data
 data = load_data()
 
+st.write("Available columns:", store_data.columns.tolist())
+st.write(store_data.head())
+
 # Sidebar: Store filter
 st.sidebar.header("1. Select Store")
 if 'store' in data.columns:
