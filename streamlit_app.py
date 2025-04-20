@@ -34,8 +34,8 @@ def evaluate_model(test, forecast):
 # Load and show data
 data = load_data()
 
-st.write("Available columns:", data.columns.tolist())  # Corrected column reference to 'data'
-st.write(data.head())
+#st.write("Available columns:", data.columns.tolist())  # Corrected column reference to 'data'
+#st.write(data.head())
 
 # Sidebar: Store filter
 st.sidebar.header("1. Select Store")
