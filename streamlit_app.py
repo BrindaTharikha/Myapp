@@ -45,7 +45,7 @@ if 'store' in data.columns:
         st.warning("No sales data found for the selected store.")
     else:
         st.write(f"### 📍 Sales for Store {selected_store}")
-        st.line_chart(store_data.set_index('date')['sales'])
+        st.line_chart(store_data.set_index('date')['Weekly_Sales'])
 
         # Model & Horizon
         st.sidebar.header("2. Forecast Settings")
