@@ -17,7 +17,7 @@ st.title("📈 Walmart Sales Forecasting App")
 # --- Load Data ---
 @st.cache_data
 def load_data():
-    df = pd.read_csv("walmart_sales.csv")
+    df = pd.read_csv("Walmart_Sales.csv")
     df.columns = df.columns.str.strip().str.lower()
     df['date'] = pd.to_datetime(df['date'], errors='coerce')
     df.dropna(subset=['date'], inplace=True)
