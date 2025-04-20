@@ -3,6 +3,20 @@ pandas
 numpy
 matplotlib
 statsmodels
+seaborn
 scikit-learn
 keras
 tensorflow
+altair
+fpdf
+streamlit-chat
+
+
+# LangChain + OpenAI
+langchain>=0.0.200
+langchain-experimental>=0.0.10
+openai>=0.27.0
+
+# Time Series Forecasting
+prophet>=1.1.5
+
